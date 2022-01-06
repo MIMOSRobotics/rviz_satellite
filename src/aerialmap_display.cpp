@@ -59,7 +59,7 @@ using rviz_common::properties::RosTopicProperty;
 using rviz_common::properties::StringProperty;
 using rviz_common::properties::StatusProperty;
 
-std::string const AerialMapDisplay::MAP_FRAME = "map";
+std::string const AerialMapDisplay::MAP_FRAME = "gps"; //Hisham-need to use fake gps frame id
 
 AerialMapDisplay::AerialMapDisplay() : Display()
 {
