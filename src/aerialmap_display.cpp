@@ -59,7 +59,7 @@ using rviz_common::properties::RosTopicProperty;
 using rviz_common::properties::StringProperty;
 using rviz_common::properties::StatusProperty;
 
-std::string const AerialMapDisplay::MAP_FRAME = "gps"; //Hisham-need to use fake gps frame id
+std::string const AerialMapDisplay::MAP_FRAME = "map"; //Hisham-need to use fake gps frame id
 
 AerialMapDisplay::AerialMapDisplay() : Display()
 {
@@ -81,6 +81,15 @@ AerialMapDisplay::AerialMapDisplay() : Display()
                                       this, SLOT(updateDrawUnder()));
   draw_under_property_->setShouldBeSaved(true);
   draw_under_ = draw_under_property_->getValue().toBool();
+
+  //properties for map rotation
+  rotate_property_ = 
+    new FloatProperty("Map rotation", -90, "Map rotation ", this, SLOT(updateRotate()));
+  rotate_property_->setMin(0);
+  rotate_property_->setMax(359);
+  rotate_property_->setShouldBeSaved(true);
+  rotate_ = rotate_property_->getValue().toFloat();
+
 
   // properties for map
   tile_url_property_ =
@@ -161,6 +170,26 @@ void AerialMapDisplay::subscribe()
 void AerialMapDisplay::unsubscribe()
 {
   navsat_fix_sub_.reset();
+}
+
+
+void AerialMapDisplay::updateRotate()
+{
+
+  auto const rotate = rotate_property_->getFloat();
+  if (rotate == rotate_)
+  {
+    return;
+  }
+
+  rotate_ = rotate;
+
+  if (!isEnabled())
+  {
+    return;
+  }
+
+  triggerSceneAssembly();
 }
 
 void AerialMapDisplay::updateAlpha()
@@ -707,10 +736,21 @@ void AerialMapDisplay::transformMapTileToFixedFrame()
     setStatus(::rviz::StatusProperty::Ok, "Transform", "Transform OK");
 
     // the translation of the tile w.r.t. the fixed-frame
-    auto const t_centertile_fixed = t_fixed_map + o_fixed_map * t_centertile_map_;
+
+    Ogre::Matrix3  xyz_R_ned;
+    Ogre::Radian radx(Ogre::Real(0*  3.1415926 /180));
+    Ogre::Radian rady(Ogre::Real(0* 3.1415926 /180));
+    Ogre::Radian radz(Ogre::Real(rotate_ * 3.1415926 /180));  //rotate 90 degrees  map to the right
+    xyz_R_ned.FromEulerAnglesXYZ(radx,rady,radz);   
+    //t_centertile_fixed = xyz_R_ned * t_centertile_fixed;
+                          
+    auto const t_centertile_fixed = t_fixed_map + xyz_R_ned * t_centertile_map_;
+
 
     scene_node_->setPosition(t_centertile_fixed);
-    scene_node_->setOrientation(o_fixed_map);
+    scene_node_->setOrientation(xyz_R_ned);
+
+    //scene_node_->setOrientation(o_fixed_map);
   }
   else
   {

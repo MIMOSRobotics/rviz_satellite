@@ -67,6 +67,7 @@ public:
 
 protected Q_SLOTS:
   void updateAlpha();
+  void updateRotate();
   void updateTopic();
   void updateDrawUnder();
   void updateTileUrl();
@@ -162,6 +163,8 @@ protected:
   rviz_common::properties::IntProperty* blocks_property_ = nullptr;
   rviz_common::properties::FloatProperty* alpha_property_ = nullptr;
   rviz_common::properties::Property* draw_under_property_ = nullptr;
+  rviz_common::properties::FloatProperty* rotate_property_ = nullptr;   //rotation in degree
+
 
   /// the alpha value of the tile's material
   float alpha_;
@@ -173,6 +176,8 @@ protected:
   int zoom_;
   /// the number of tiles loaded in each direction around the center tile
   int blocks_;
+
+  float rotate_;    //rotation in degree
 
   // tile management
   /// whether we need to re-query and re-assemble the tiles
